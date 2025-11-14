@@ -31,6 +31,16 @@ This system uses a **7-node LangGraph workflow** with specialized AI agents to a
 - **Blockchain.com API**: On-chain metrics (hash rate, mempool, network health) (FREE, unlimited)
 - **Yahoo Finance**: Historical price data fallback (FREE, unlimited)
 
+### Cloud Integration & Notifications (FREE)
+- **Google Sheets API**: Dynamic configuration management in the cloud (FREE, 60 reads/min)
+  - Live parameter updates without code changes
+  - Synchronized caching with local fallback
+  - Smart rate limiting (1 call/min, 0.03% of quota)
+- **Telegram Bot API**: Real-time trade notifications and alerts (FREE, unlimited)
+  - Instant alerts for trade executions
+  - System status updates
+  - Error notifications
+
 ### Data Processing
 - **Pandas**: CSV processing and historical data analysis
 - **NumPy 1.26.4**: Technical indicator calculations
@@ -86,6 +96,11 @@ The system **automatically selects** the optimal strategy every cycle based on d
 - **Rate Limiting**: Smart rate limiters with circuit breakers for all external APIs
 - **Error Handling**: Retry logic with exponential backoff for transient failures
 - **Logging**: Structured logging with clear status markers ([OK], [FAIL], [WARN])
+- **Telegram Notifications**: Real-time alerts for trades, errors, and system status
+- **Google Sheets Configuration**: Live parameter updates without restarting the system
+  - Change DCA thresholds, position sizes, risk limits on-the-fly
+  - Synchronized caching for offline operation
+  - Fallback to local config if Google Sheets unavailable
 
 ### Cost Optimization
 - **100% FREE Operation**: $0/month - all APIs and LLMs are free tier
@@ -99,6 +114,11 @@ The system operates as a **LangGraph state machine** with 7 nodes orchestrating 
 
 ```
 TRADING CYCLE (Every 30 minutes)
+    |
+    +-- CONFIGURATION SYNC (Google Sheets API - Optional)
+    |       |-- Load trading parameters from cloud (DCA threshold, position limits, etc.)
+    |       |-- Synchronized caching with local fallback
+    |       └─> Output: Trading configuration
     |
     +-- NODE 1: PARALLEL DATA COLLECTION (Concurrent API calls)
     |       |-- Binance API: Current BTC price, volume, 24h change
@@ -145,6 +165,11 @@ TRADING CYCLE (Every 30 minutes)
             |-- Checks balance and multi-layer guardrails
             +-- Output: BUY $X USD or HOLD decision with full reasoning
             └─> Execution via Position Manager
+                    |
+                    +-- TRADE EXECUTION
+                    |       |-- Position Manager: ATR-based stop-losses, budget tracking
+                    |       +-- Telegram Notifications (Optional): Real-time trade alerts
+                    |       └─> Output: Position opened/closed, notifications sent
 ```
 
 **Data Flow**:
@@ -187,6 +212,9 @@ cp .env.example .env
 #   - COINMARKETCAP_API_KEY (free tier: 10k req/month)
 #   - HUGGINGFACE_API_KEY (free tier)
 #   - OPENROUTER_API_KEY (free tier)
+#   - TELEGRAM_BOT_TOKEN (optional - for real-time notifications)
+#   - TELEGRAM_CHAT_ID (optional - your Telegram chat ID)
+#   - GOOGLE_SHEET_URL (optional - for cloud configuration)
 #   - No Blockchain.com key needed (public API)
 
 # 5. Prepare historical data
