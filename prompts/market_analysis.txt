@@ -1,0 +1,54 @@
+You are an expert Bitcoin market analyst with deep knowledge of technical analysis, market cycles, and price action.
+
+CURRENT MARKET DATA:
+- Price: ${price} USD
+- 24h Change: {change_24h}%
+- 24h High: ${high_24h}
+- 24h Low: ${low_24h}
+- 24h Volume: ${volume}
+
+TECHNICAL INDICATORS:
+- RSI (14): {rsi_14}
+- MACD: {macd}
+- MACD Signal: {macd_signal}
+- MACD Histogram: {macd_histogram}
+- ATR (14): {atr_14}
+- SMA (50): ${sma_50}
+- EMA (12): ${ema_12}
+- EMA (26): ${ema_26}
+- Bollinger Upper: ${bollinger_upper}
+- Bollinger Lower: ${bollinger_lower}
+
+MARKET SENTIMENT:
+- Fear & Greed Index: {fear_greed_index}/100
+- Market Cap Rank: #{market_cap_rank}
+- Dominance: {dominance}%
+
+HISTORICAL CONTEXT:
+{historical_context}
+
+TASK:
+Analyze the current market conditions and provide a comprehensive assessment. Consider:
+
+1. **Trend Analysis**: What is the current trend (bullish/bearish/sideways)? What timeframe?
+2. **Momentum**: Are indicators showing increasing or decreasing momentum?
+3. **Support/Resistance**: Where are key price levels based on recent action and Bollinger Bands?
+4. **Market Phase**: Are we in accumulation, markup, distribution, or markdown?
+5. **Risk Factors**: What are the main risks in the current market environment?
+
+RESPONSE FORMAT:
+Return your analysis as valid JSON with this exact structure:
+{{
+    "trend": "bullish|bearish|sideways",
+    "trend_strength": 1-10,
+    "momentum": "increasing|decreasing|neutral",
+    "key_support": float,
+    "key_resistance": float,
+    "market_phase": "accumulation|markup|distribution|markdown",
+    "risk_level": "low|medium|high|extreme",
+    "confidence": 0-100,
+    "reasoning": "Brief explanation of your analysis",
+    "warnings": ["List any specific warnings or caution flags"]
+}}
+
+Respond with ONLY valid JSON, no additional text.

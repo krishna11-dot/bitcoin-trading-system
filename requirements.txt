@@ -1,0 +1,56 @@
+# Bitcoin Trading System - Python Dependencies
+
+# ============================================================================
+# Core Framework
+# ============================================================================
+python-dotenv>=1.0.0  # Environment variable management
+pydantic>=2.0.0       # Data validation and type safety
+requests>=2.31.0      # HTTP requests for APIs
+
+# ============================================================================
+# Data Processing & Analysis
+# ============================================================================
+pandas>=2.0.0         # Data manipulation
+numpy>=1.24.0         # Numerical computing
+
+# ============================================================================
+# Technical Analysis (Optional but Recommended)
+# ============================================================================
+# TA-Lib - Technical analysis library (OPTIONAL)
+# Installation is more complex, see instructions below
+# TA-Lib>=0.4.28
+
+# Alternative: Use our fallback implementations (already included)
+# No installation needed - system will use manual calculations
+
+# ============================================================================
+# Machine Learning & RAG (Optional but Recommended)
+# ============================================================================
+# FAISS - Vector similarity search for RAG (OPTIONAL)
+faiss-cpu>=1.7.4      # CPU-only version (lighter)
+# OR for GPU support (larger):
+# faiss-gpu>=1.7.4
+
+# ============================================================================
+# LLM & AI
+# ============================================================================
+langchain>=0.3.0              # LangChain framework for LLM orchestration
+langchain-core>=0.3.0         # LangChain core components
+langchain-community>=0.3.0    # Community integrations
+langchain-openai>=0.2.0       # OpenAI/OpenRouter integrations
+langchain-huggingface>=0.1.0  # HuggingFace integrations (new package)
+langgraph>=0.2.0              # LangGraph workflow orchestration
+huggingface-hub>=0.20.0       # HuggingFace Hub API client
+
+# ============================================================================
+# Google Sheets Integration (Optional)
+# ============================================================================
+gspread>=5.11.0       # Google Sheets API client
+google-auth>=2.23.0   # Google authentication
+
+# ============================================================================
+# Development & Testing (Optional)
+# ============================================================================
+pytest>=7.4.0         # Testing framework
+black>=23.7.0         # Code formatting
+mypy>=1.5.0          # Type checking
