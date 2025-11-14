@@ -10,8 +10,9 @@ This system uses a **7-node LangGraph workflow** with specialized AI agents to a
 
 **Key Innovations**:
 1. **Adaptive Strategy Selection**: Automatically switches between DCA (conservative), SWING (moderate), and DAY (aggressive) strategies based on detected market regime (crisis, trending, ranging, high volatility)
-2. **Position Manager**: ATR (Average True Range) based stop-losses, budget allocation limits per strategy, emergency safeguards at -25% portfolio loss
-3. **RAG + On-Chain Fusion**: Combines traditional technical analysis with RAG over historical market data and real-time blockchain metrics to provide data-driven trading decisions that learn from past market conditions
+2. **External Prompt Engineering**: All AI agent prompts in editable text files - modify trading logic without code changes (see [Prompt Engineering](#prompt-engineering))
+3. **Position Manager**: ATR (Average True Range) based stop-losses, budget allocation limits per strategy, emergency safeguards at -25% portfolio loss
+4. **RAG + On-Chain Fusion**: Combines traditional technical analysis with RAG over historical market data and real-time blockchain metrics to provide data-driven trading decisions that learn from past market conditions
 
 ## Tech Stack
 
@@ -62,7 +63,7 @@ This system uses a **7-node LangGraph workflow** with specialized AI agents to a
   - **DCA Decision**: Makes final buy/hold decisions based on all inputs
 - **RAG-Enhanced Analysis**: FAISS-accelerated similarity search over 1000+ historical patterns (10x faster)
 - **Multi-Source Data Fusion**: Combines technical indicators, sentiment, on-chain metrics, historical patterns, and market regime detection
-- **External Prompts**: All agent prompts in `prompts/*.txt` for easy iteration without code changes
+- **External Prompt System**: All agent prompts stored in `prompts/*.txt` - modify AI behavior without touching code (see [Prompt Engineering](#prompt-engineering) section)
 
 ### Trading Strategies (Adaptive Selection)
 The system **automatically selects** the optimal strategy every cycle based on detected market conditions:
@@ -386,6 +387,125 @@ GOOGLE_SHEET_URL=xxxxx           # Optional - for cloud configuration sync
 
 # No Blockchain.com key needed - public API is free
 ```
+
+## Prompt Engineering
+
+### External Prompt System
+
+All AI agent prompts are **externalized** in text files (`prompts/*.txt`), allowing you to modify AI behavior without changing code. This enables:
+- **A/B Testing**: Test different prompt strategies by editing text files
+- **Rapid Iteration**: Tweak decision logic in minutes, not hours
+- **Version Control**: Track prompt changes in git with clear diffs
+- **Non-Technical Editing**: Prompt engineers can modify AI behavior without Python knowledge
+
+### Available Prompts
+
+| Prompt File | Agent | Purpose | Key Parameters |
+|-------------|-------|---------|----------------|
+| [market_analysis_agent.txt](prompts/market_analysis_agent.txt) | Market Analyst | Analyzes technical indicators with RAG context | `{rsi}`, `{macd}`, `{rag_patterns}` |
+| [sentiment_analysis_agent.txt](prompts/sentiment_analysis_agent.txt) | Sentiment Analyst | Interprets Fear & Greed Index and market psychology | `{fear_greed_index}`, `{sentiment}` |
+| [risk_assessment_agent.txt](prompts/risk_assessment_agent.txt) | Risk Analyst | Evaluates on-chain metrics and volatility | `{atr}`, `{hash_rate}`, `{mempool_size}` |
+| [dca_decision_agent.txt](prompts/dca_decision_agent.txt) | DCA Decision Maker | **CRITICAL**: Final buy/hold decision with USD amounts | `{dca_amount}`, `{dca_threshold}`, `{rsi}` |
+| [execution_validation.txt](prompts/execution_validation.txt) | Execution Validator | Pre-trade validation and guardrails | `{amount}`, `{balance}`, `{position_limit}` |
+| [strategy_decision.txt](prompts/strategy_decision.txt) | Strategy Selector | Selects DCA/SWING/DAY based on market regime | `{volatility}`, `{trend}`, `{regime}` |
+| [market_analysis.txt](prompts/market_analysis.txt) | Market Analyst (legacy) | Alternative market analysis prompt | - |
+| [risk_assessment.txt](prompts/risk_assessment.txt) | Risk Analyst (legacy) | Alternative risk assessment prompt | - |
+
+### How Prompts Are Used
+
+Each agent loads its prompt at runtime and fills in dynamic parameters:
+
+```python
+# Example: DCA Decision Agent
+from pathlib import Path
+
+# Load external prompt
+prompt_path = Path("prompts/dca_decision_agent.txt")
+prompt_template = prompt_path.read_text()
+
+# Fill in current market data
+prompt = prompt_template.format(
+    price=96817.86,
+    change_24h=-5.89,
+    dca_threshold=-3.0,
+    dca_amount=100,
+    rsi=32.3,
+    sentiment="bearish",
+    # ... more parameters
+)
+
+# Send to LLM
+response = llm.invoke(prompt)
+```
+
+### Modifying Agent Behavior
+
+**Example: Make DCA more aggressive**
+
+Edit [prompts/dca_decision_agent.txt](prompts/dca_decision_agent.txt):
+
+```diff
+- 2. TECHNICAL TRIGGER:
+-    - RSI is below 35 (very oversold - strong buy signal)
++ 2. TECHNICAL TRIGGER:
++    - RSI is below 45 (oversold - buy signal)
+```
+
+**Example: Change confidence thresholds**
+
+Edit any agent prompt to adjust confidence levels:
+
+```diff
+- Example BUY response (when ANY trigger is met):
+  {
+      "action": "buy",
+      "amount": 100,
+-     "confidence": 0.85
++     "confidence": 0.90
+  }
+```
+
+**Example: Add new decision rules**
+
+Add custom logic to [prompts/dca_decision_agent.txt](prompts/dca_decision_agent.txt):
+
+```
+4. VOLUME TRIGGER (NEW):
+   - 24h volume is 2x above average (strong market interest)
+```
+
+### Critical Prompt: DCA Decision Agent
+
+The [dca_decision_agent.txt](prompts/dca_decision_agent.txt) prompt is the **most important** prompt in the system:
+
+- **USD Amounts**: LLM must return USD amounts (e.g., `"amount": 100`), NOT BTC amounts
+- **Decision Logic**: Uses OR logic - ANY trigger (price drop OR RSI OR sentiment) activates buy
+- **Validation Checklist**: Built-in validation prevents common LLM errors
+- **Examples**: Provides correct/incorrect response examples to guide LLM
+
+**Why External Prompts Matter**: During development, we discovered the LLM was returning `amount=0` instead of `amount=100`. By modifying the prompt (adding validation checklist and explicit examples), we fixed the issue without changing Python code.
+
+### Best Practices
+
+1. **Test Changes**: After modifying prompts, run `python test_agents.py` to verify behavior
+2. **Use Version Control**: Commit prompt changes separately with clear messages
+3. **Document Parameters**: Add comments explaining what each `{parameter}` means
+4. **Validate Output**: Include output format examples and validation rules in prompts
+5. **Iterate Gradually**: Change one rule at a time and test before adding more
+
+### Prompt Parameters Reference
+
+Common parameters available across prompts:
+
+- **Market Data**: `{price}`, `{change_24h}`, `{volume}`
+- **Technical Indicators**: `{rsi}`, `{macd}`, `{atr}`, `{sma_50}`, `{ema_200}`
+- **On-Chain**: `{hash_rate}`, `{mempool_size}`, `{block_time}`
+- **Sentiment**: `{fear_greed_index}`, `{sentiment}`, `{market_trend}`
+- **RAG Context**: `{rag_patterns}`, `{success_rate}`, `{avg_outcome}`
+- **Configuration**: `{dca_amount}`, `{dca_threshold}`, `{max_position_size}`
+- **Portfolio**: `{btc_balance}`, `{usd_balance}`, `{total_exposure}`
+
+See individual prompt files for complete parameter lists.
 
 ## Usage
 
