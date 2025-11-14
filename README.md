@@ -2,6 +2,8 @@
 
 An intelligent multi-agent LLM (Large Language Model) system for autonomous Bitcoin trading with **adaptive strategy selection** (DCA/SWING/DAY), combining real-time market analysis, historical pattern matching, on-chain analytics, and AI-powered decision making with comprehensive safety guardrails and automated position management.
 
+> **🔒 Safe Paper Trading by Default**: This system uses **Binance Testnet** (https://testnet.binance.vision) for safe paper trading with zero financial risk. Test strategies thoroughly before considering production deployment.
+
 ## Description
 
 This system uses a **7-node LangGraph workflow** with specialized AI agents to analyze Bitcoin market conditions from multiple perspectives (technical indicators, sentiment analysis, risk assessment, historical patterns, market regime detection) and **automatically selects optimal trading strategies** based on real-time conditions. The entire system operates at $0/month using free APIs and open-source LLMs, with FAISS-accelerated RAG (Retrieval-Augmented Generation) for 10x faster historical pattern matching.
@@ -26,7 +28,9 @@ This system uses a **7-node LangGraph workflow** with specialized AI agents to a
 - **FAISS 1.12.0**: Facebook's vector search library for 10x faster RAG (Retrieval-Augmented Generation) queries
 
 ### Data Sources (All FREE)
-- **Binance API**: Real-time Bitcoin price, volume, 24h change (FREE, 1200 req/min)
+- **Binance Testnet API**: Real-time Bitcoin price, volume, 24h change (FREE, testnet for safe testing, 1200 req/min)
+  - Uses https://testnet.binance.vision by default (paper trading environment)
+  - Can be switched to production Binance API by setting `TESTNET_MODE=False` in config
 - **CoinMarketCap API**: Market sentiment, Fear & Greed Index (FREE, 10,000 req/month)
 - **Blockchain.com API**: On-chain metrics (hash rate, mempool, network health) (FREE, unlimited)
 - **Yahoo Finance**: Historical price data fallback (FREE, unlimited)
@@ -84,7 +88,7 @@ The system **automatically selects** the optimal strategy every cycle based on d
 **Adaptive DCA Triggers**: System calculates dynamic entry thresholds (1.5%-3.5% price drop) based on current volatility instead of fixed 3% threshold
 
 ### Data & Analysis
-- **Real-Time Market Data**: Live Bitcoin price, volume, 24h changes from Binance
+- **Real-Time Market Data**: Live Bitcoin price, volume, 24h changes from Binance Testnet (safe testing environment)
 - **Technical Indicators**: RSI, MACD, ATR, SMA, EMA, Bollinger Bands calculated from price history
 - **On-Chain Metrics**: Network hash rate, mempool size, block data from Blockchain.com
 - **Sentiment Analysis**: Fear & Greed Index, market sentiment from CoinMarketCap
@@ -121,7 +125,7 @@ TRADING CYCLE (Every 30 minutes)
     |       └─> Output: Trading configuration
     |
     +-- NODE 1: PARALLEL DATA COLLECTION (Concurrent API calls)
-    |       |-- Binance API: Current BTC price, volume, 24h change
+    |       |-- Binance Testnet API: Current BTC price, volume, 24h change (paper trading)
     |       |-- CoinMarketCap: Sentiment, Fear & Greed Index
     |       +-- Blockchain.com: On-chain metrics (hash rate, mempool)
     |       └─> Output: Real-time market snapshot
@@ -208,7 +212,9 @@ uv pip install -r requirements.txt
 # 4. Configure environment variables
 cp .env.example .env
 # Edit .env with your API keys (all FREE tiers):
-#   - BINANCE_API_KEY (optional - works without)
+#   - BINANCE_API_KEY (optional - Binance Testnet key from https://testnet.binance.vision/)
+#   - BINANCE_API_SECRET (optional - Binance Testnet secret)
+#   - TESTNET_MODE=True (default - uses Binance Testnet for safe paper trading)
 #   - COINMARKETCAP_API_KEY (free tier: 10k req/month)
 #   - HUGGINGFACE_API_KEY (free tier)
 #   - OPENROUTER_API_KEY (free tier)
@@ -368,8 +374,15 @@ HUGGINGFACE_API_KEY=hf_xxxxx     # Get from: https://huggingface.co/settings/tok
 OPENROUTER_API_KEY=sk-or-xxxxx   # Get from: https://openrouter.ai/keys
 
 # Market Data (optional but recommended)
-BINANCE_API_KEY=xxxxx            # Optional - works without (public data)
+BINANCE_API_KEY=xxxxx            # Optional - Binance Testnet: https://testnet.binance.vision/
+BINANCE_API_SECRET=xxxxx         # Optional - Binance Testnet secret
+TESTNET_MODE=True                # Default: True (uses testnet for safe paper trading)
 COINMARKETCAP_API_KEY=xxxxx      # FREE tier: https://coinmarketcap.com/api/
+
+# Cloud Integration (optional)
+TELEGRAM_BOT_TOKEN=xxxxx         # Optional - for real-time notifications
+TELEGRAM_CHAT_ID=xxxxx           # Optional - your Telegram chat ID
+GOOGLE_SHEET_URL=xxxxx           # Optional - for cloud configuration sync
 
 # No Blockchain.com key needed - public API is free
 ```
@@ -392,7 +405,7 @@ uv run python main.py
 The system runs continuously with 15-minute cycles:
 
 1. **Fetches Data** (5 seconds):
-   - Current Bitcoin price from Binance
+   - Current Bitcoin price from Binance Testnet (paper trading environment)
    - Sentiment from CoinMarketCap
    - On-chain metrics from Blockchain.com
 
@@ -600,7 +613,7 @@ OpenRouter: 24/200 requests (last hour)
 |-----------|---------|------|------------|
 | **LLM Inference** | HuggingFace (free tier) | $0/month | 60 req/hour |
 | **LLM Inference** | OpenRouter (free tier) | $0/month | 200 req/day |
-| **Market Data** | Binance (public) | $0/month | 1200 req/min |
+| **Market Data** | Binance Testnet (paper trading) | $0/month | 1200 req/min |
 | **Sentiment** | CoinMarketCap (free) | $0/month | 10,000 req/month |
 | **On-Chain** | Blockchain.com (free) | $0/month | Unlimited |
 | **Historical** | Yahoo Finance (free) | $0/month | Unlimited |
